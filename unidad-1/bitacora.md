@@ -113,11 +113,12 @@ while True:
 ```
 
 ### ¿Cómo funciona el programa?
-El programa utiliza la misma estructura de código que la actividad anterior, también realizada en clase. El código de Micro:bit no recibió edición alguna. En el programa de P5.js realicé una adición, la variable X=width que servía como la variable a editar para que pudiéramos cambiar la posición en X de la elipse. Tenía inicialmente los valores por defecto del canvas realizado por el profesor (400, 400) y a ese número (en X) se le añaden o restan 100 unidades. Decidí dejar las funciones 'Fill' por razones estéticas para que cuando la elipse cambie de lugar, también se cambie su color. Al mover el Micro:bit físico, podemos cambiar el color de la elipse a verde, sin afectar la coordenada modificada. 
+El programa utiliza la misma estructura de código que la actividad anterior, también realizada en clase. El código de Micro:bit no recibió edición alguna. En el programa de P5.js realicé una adición, la variable X=width que servía como la variable a editar para que pudiéramos cambiar la posición en X de la elipse. Tenía inicialmente los valores por defecto del canvas realizado por el profesor (400, 400) y a ese número (en X) se le añaden o restan 100 unidades por medio del botón **A (hacia la izquierda)** o el botón **B (hacia la derecha)**. Decidí dejar las funciones 'Fill' por razones estéticas para que cuando la elipse cambie de lugar, también se cambie su color. Al mover el Micro:bit físico, podemos cambiar el color de la elipse a verde, sin afectar la coordenada modificada. 
 
 > Nota: Debido a que la función para cambiar a color verde no recibe propiamente un dato emitido por el Micro:bit hacia la consola **(dataRX)**, si hacemos 'Shake' al Micro:bit antes de mover en la coordenada X la elipse, corremos el riesgo de que la coordenada X se mueva hacia la coordenada emitida por el dato recibido más reciente (es decir, se moverá hacia la coordenada X del botón 'B').
 
 ## Bitácora de reflexión
+
 
 
 
