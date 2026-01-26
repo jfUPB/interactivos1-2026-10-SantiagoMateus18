@@ -18,8 +18,106 @@ Sería muy interesante generar un brand propio por medio de la ayuda de la IA ge
 
 ## Bitácora de aplicación 
 
+### El programa de p5.js:
+```.h
+let port;
+let connectBtn;
+let X;
 
+function setup() {
+    createCanvas(400, 400);
+    background(220);
+    X = width;
+    port = createSerial();
+    connectBtn = createButton('Connect to micro:bit');
+    connectBtn.position(80, 300);
+    connectBtn.mousePressed(connectBtnClick);
+    let sendBtn = createButton('Send Love');
+    sendBtn.position(220, 300);
+    sendBtn.mousePressed(sendBtnClick);
+    fill('white');
+    ellipse(width / 2, height / 2, 100, 100);
+}
+
+
+function draw() {
+  
+
+    if(port.availableBytes() > 0){
+        let dataRx = port.read(1);
+        if(dataRx == 'A'){
+          fill('red')
+          X-=100
+        }
+        else if(dataRx == 'B'){
+          fill('yellow')
+          X+=100
+        }
+        else{
+            fill('green');
+          X-=0
+        }
+        
+
+        background(220);
+        ellipse(X, height / 2, 100, 100);
+    }
+
+
+    if (!port.opened()) {
+        connectBtn.html('Connect to micro:bit');
+    }
+    else {
+        connectBtn.html('Disconnect');
+    }
+}
+
+function connectBtnClick() {
+    if (!port.opened()) {
+        port.open('MicroPython', 115200);
+    } else {
+        port.close();
+    }
+}
+
+function sendBtnClick() {
+    port.write('h');
+}
+```
+
+### El programa de Micro:bit
+```.h
+from microbit import *
+
+uart.init(baudrate=115200)
+display.show(Image.BUTTERFLY)
+
+while True:
+    if button_a.is_pressed():
+        uart.write('A')
+        sleep(500)
+    if button_b.is_pressed():
+        uart.write('B')
+        sleep(500)
+    if accelerometer.was_gesture('shake'):
+        uart.write('C')
+        sleep(500)
+    if uart.any():
+        data = uart.read(1)
+        if data:
+            if data[0] == ord('h'):
+                display.show(Image.HEART)
+                sleep(500)
+                display.show(Image.HAPPY)
+
+```
+
+### ¿Cómo funciona el programa?
+El programa utiliza la misma estructura de código que la actividad anterior, también realizada en clase. El código de Micro:bit no recibió edición alguna. En el programa de P5.js realicé una adición, la variable X=width que servía como la variable a editar para que pudiéramos cambiar la posición en X de la elipse. Tenía inicialmente los valores por defecto del canvas realizado por el profesor (400, 400) y a ese número (en X) se le añaden o restan 100 unidades. Decidí dejar las funciones 'Fill' por razones estéticas para que cuando la elipse cambie de lugar, también se cambie su color. Al mover el Micro:bit físico, podemos cambiar el color de la elipse a verde, sin afectar la coordenada modificada. 
+
+> Nota: Debido a que la función para cambiar a color verde no recibe propiamente un dato emitido por el Micro:bit hacia la consola **(dataRX)**, si hacemos 'Shake' al Micro:bit antes de mover en la coordenada X la elipse, corremos el riesgo de que la coordenada X se mueva hacia la coordenada emitida por el dato recibido más reciente (es decir, se moverá hacia la coordenada X del botón 'B').
 
 ## Bitácora de reflexión
+
 
 
