@@ -9,6 +9,7 @@ Es un (como la palabra lo dice) sistema diseñado por una o varias personas de f
 #### ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
 Personalmente, opino que la aparición de sistemas interactivos que mezclen física, realidad, mercado y usuario abre puertas en muchos campos de acción laboral, especialmente en un entretenimiento orientado al mundo mas ejectuvio (muy por la linea del branding), por ejemplo: Campañas publicitarias con experiencia de usuario, sistemas de interacción usuario-máquina para parques, escenarios y museos, entre otros. 
 
+### Actividad 02
 #### ¿Qué es el diseño/arte generativo?
 Es una forma de diseñar y plasmar ideas creativas usualmente orientadas al arte visual (digital y a veces llevado a medios físicos) utilizando principalmente códigos y metodlogías Input-Output con información y datos trasnformados finalmente en distintos elementos publicitarios, artísticos, interactivos, musicales, animados, entre otros. 
 
@@ -20,4 +21,5 @@ Sería muy interesante generar un brand propio por medio de la ayuda de la IA ge
 
 
 ## Bitácora de reflexión
+
 
