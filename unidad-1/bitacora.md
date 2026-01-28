@@ -126,7 +126,8 @@ El programa utiliza la misma estructura de código que la actividad anterior, ta
 
 ## Bitácora de reflexión
 ### ¿Cómo funciona el sistema físico interactivo de la Actividad 04?
-El sistema físico de la actividad 04 es a simple vista una convergencia entre un emisor físico que genera estímulos basados en contacto (botones y su presión) y sensores de movimiento (la información recibida al hacerle 'shake') y un receptor completamente digital que recibe los datos de los estímulos físicos transformados en variables o datos (como 'A', 'B' y 'C'). De esta forma se genera una comunicación máquina-usuario y mundo físico-digital de forma correcta utilizando métodos pre-estipulados para llevar a cabo tareas sencillas. De la misma forma, podemos intuir, planificar y posteriormente probar que la comunicación es **bilateral** por lo que la máquina puede enviarle información (con base a los mismos datos) al medio físico para generar una respuesta por medio de estímulos visibles por el usuario (luces, letras, movimientos, etc.). 
+El sistema físico de la actividad 04 es a simple vista una convergencia entre un emisor físico que genera estímulos basados en contacto (botones y su presión) y sensores de movimiento (la información recibida al hacerle 'shake') y un receptor completamente digital que recibe los datos de los estímulos físicos transformados en variables (como 'A', 'B' y 'C'). De esta forma se genera una comunicación máquina-usuario y mundo físico-digital de forma correcta utilizando métodos pre-estipulados para llevar a cabo tareas sencillas. De la misma forma, podemos intuir, planificar y posteriormente probar que la comunicación es **bilateral** por lo que la máquina puede enviarle información (con base a los mismos datos) al medio físico para generar una respuesta por medio de estímulos visibles por el usuario (luces, letras, movimientos, etc.). 
+
 
 
 
