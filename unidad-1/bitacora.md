@@ -16,6 +16,9 @@ Es una forma de diseñar y plasmar ideas creativas usualmente orientadas al arte
 #### ¿Cómo podrías aplicar lo que has visto en tu perfil profesional?
 Sería muy interesante generar un brand propio por medio de la ayuda de la IA generativa para mis proyectos personales de tal manera que no se use como un "artista" o un reemplazo, sino como el píncel que ayuda a diseñar mis productos y obras, controlado totalmente por mí mismo, logrando llevar mi visión del arte a un medio digital. 
 
+### Actividad 03
+#### (Realizada en clase)
+
 ### Actividad 04
 #### En tu bitácora: ¿Por qué no funcionaba el programa con was_pressed() y por qué funciona con is_pressed()? Explica detalladamente.
 Debido a la diferencia o delay entre las señales. Con la función 'is.Pressed' la función envía señales inmediatas bajo un 'true' cuando oprimimos el botón en cuestión. La señal es enviada inmediatamente al presionarlo, por lo que el programa P5.js alcanza leerlo en tiempo real. Sin embargo, con 'was.Pressed', la señal devuelve un true solo una vez cuando el botón fue presionado anteriormente a la pregunta del sistema, si es un true, el Micro:bit realizará la acción requerida, pero lo hará **después** de la interacción del usuario, por ende, para cuando el código p5.js quiere leerlo al mismo tiempo, ya no hay señal que recibir e interpreta que nunca fue presionado ningún botón.
@@ -122,6 +125,7 @@ El programa utiliza la misma estructura de código que la actividad anterior, ta
 > Nota: Debido a que la función para cambiar a color verde no recibe propiamente un dato emitido por el Micro:bit hacia la consola **(dataRX)**, si hacemos 'Shake' al Micro:bit antes de mover en la coordenada X la elipse, corremos el riesgo de que la coordenada X se mueva hacia la coordenada emitida por el dato recibido más reciente (es decir, se moverá hacia la coordenada X del botón 'B').
 
 ## Bitácora de reflexión
+
 
 
 
