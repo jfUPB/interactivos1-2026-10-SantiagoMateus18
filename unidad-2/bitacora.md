@@ -221,8 +221,143 @@ while True:
         semaforo1.post_event("A")
     utime.sleep_ms(20)
 ```
+
+### Actividad 04
+
+#### Diagrama UML:
+<img width="389" height="617" alt="image" src="https://github.com/user-attachments/assets/ce4a4b25-12f1-4c01-a4d3-e0ac1642a054" />
+
+#### Código del Micro:bit
+
+```.h
+from microbit import *
+import utime
+import music
+
+def make_fill_images(on='9', off='0'):
+    imgs = []
+    for n in range(26):
+        rows = []
+        k = 0
+        for y in range(5):
+            row = []
+            for x in range(5):
+                row.append(on if k < n else off)
+                k += 1
+            rows.append(''.join(row))
+        imgs.append(Image(':'.join(rows)))
+    return imgs
+
+FILL = make_fill_images()
+# Para mostrar usas display.show(FILL[n]) donde n será
+# un valor de 0 a 25
+
+class Timer:
+    def __init__(self, owner, event_to_post, duration):
+        self.owner = owner
+        self.event = event_to_post
+        self.duration = duration
+        self.start_time = 0
+        self.active = False
+
+    def start(self, new_duration=None):
+        if new_duration is not None:
+            self.duration = new_duration
+        self.start_time = utime.ticks_ms()
+        self.active = True
+
+    def stop(self):
+        self.active = False
+
+    def update(self):
+        if self.active:
+            if utime.ticks_diff(utime.ticks_ms(), self.start_time) >= self.duration:
+                self.active = False
+                self.owner.post_event(self.event)
+
+class Task:
+    def __init__(self):
+        self.event_queue = []
+        self.timers = []
+        # Personalizas el nombre del evento y la duración
+        self.myTimer = self.createTimer("Timeout",1000)
+        self.count_pixels=20
+        self.remaining=0
+        self.estado_actual = None
+        self.transicion_a(self.estado_estado1)
+
+    def createTimer(self,event,duration):
+        t = Timer(self, event, duration)
+        self.timers.append(t)
+        return t
+
+    def post_event(self, ev):
+        self.event_queue.append(ev)
+
+    def update(self):
+        # 1. Actualizar todos los timers internos automáticamente
+        for t in self.timers:
+            t.update()
+
+        # 2. Procesar la cola de eventos resultante
+        while len(self.event_queue) > 0:
+            ev = self.event_queue.pop(0)
+            if self.estado_actual:
+                self.estado_actual(ev)
+
+    def transicion_a(self, nuevo_estado):
+        if self.estado_actual: self.estado_actual("EXIT")
+        self.estado_actual = nuevo_estado
+        self.estado_actual("ENTRY")
+
+
+    def estado_estado1(self, ev):
+        if ev == "ENTRY":
+            self.count_pixels=20
+            display.show(FILL[self.count_pixels])
+        if ev == "A":
+            if self.count_pixels < 25:
+                self.count_pixels = self.count_pixels +1
+                display.show(FILL[self.count_pixels])
+        if ev == "B":
+            if self.count_pixels > 15:
+                self.count_pixels = self.count_pixels -1
+                display.show(FILL[self.count_pixels])
+        if ev == "S":
+            self.transicion_a(self.estado_estado2)
+            
+    def estado_estado2(self, ev):
+        if ev == "ENTRY":
+            self.remaining = self.count_pixels
+            display.show(FILL[self.remaining])
+            self.myTimer.start(1000)
+        if ev == "Timeout":
+            self.remaining= self.remaining-1
+            if self.remaining >0:
+                display.show(FILL[self.remaining])
+                self.myTimer.start(1000)
+            else:
+                display.show(Image.SKULL)
+                music.play(music.BA_DING)
+        if ev == "A":
+            self.transicion_a(self.estado_estado1)
+                
+task = Task()
+
+while True:
+    if button_a.was_pressed():
+        task.post_event("A")
+    if button_b.was_pressed():
+        task.post_event("B")
+    if accelerometer.was_gesture("shake"):
+        task.post_event("S")
+    task.update()
+    utime.sleep_ms(20)
+```
+
 ## Bitácora de aplicación 
 
 
 
 ## Bitácora de reflexión
+
