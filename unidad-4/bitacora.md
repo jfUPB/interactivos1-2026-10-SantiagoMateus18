@@ -348,8 +348,7 @@ Esta imagen es prueba del cambio de patron de arte generativo que el profe reque
 <img width="1250" height="760" alt="image" src="https://github.com/user-attachments/assets/e5db7bd5-e032-4602-b74a-5b87548be2af" />
 
 #### Diagramas en ExcaliDraw hechos a memoria: 
-
-
+(Github no me esta dejando subir imagenes, lo muestro en clase)
 
 ## Bitácora de reflexión
 
