@@ -4,7 +4,7 @@ Estas bitácoras de aprendizaje buscan evidenciar tu proceso y tus resultados de
 
 Cada bitácora tendrá las siguientes secciones:
 
-``` markdown
+```markdown
 # Unidad X
 
 ## Bitácora de proceso de aprendizaje
@@ -23,4 +23,7 @@ entrada que hagas el siguiente formato:
 ``` markdown
 ### título de la entrada
 ```
+
+
+
 
