@@ -343,6 +343,9 @@ function windowResized() {
 El proceso no fue dificil pero requeria mucha atencion a los pequeños detalles que debia cambiar. Una vez entendi por completo (PUES YO YA ENTENDIA LA GRAN PARTE DEL PROCESO) entonces fue mucho más sencillo.
 
 #### Pruebas del funcionamiento: 
+###### Imagen del sketch original con las lineas amarillas: 
+<img width="1708" height="834" alt="image" src="https://github.com/user-attachments/assets/b0fbf555-e92d-40ae-ad52-aad66834d14d" />
+
 Esta imagen es prueba del cambio de patron de arte generativo que el profe requería: 
 ###### Originalmente se dibujaban lineas amarillas y ahora son octágonos NEGROS.
 <img width="1250" height="760" alt="image" src="https://github.com/user-attachments/assets/e5db7bd5-e032-4602-b74a-5b87548be2af" />
