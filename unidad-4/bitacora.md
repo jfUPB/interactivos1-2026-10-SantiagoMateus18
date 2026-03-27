@@ -2,8 +2,390 @@
 
 ## Bitácora de proceso de aprendizaje
 
+### Actividad 02
+#### Código del nuevo adapter
+```.js
+const { SerialPort } = require("serialport");
+const BaseAdapter = require("./BaseAdapter");
+
+class ParseError extends Error { }
+
+function parseCsvLine(line) {
+  const cleanLine = line.trim().replace("$", "");
+  const values = line.trim().split("|");
+  if (values.length !== 6) throw new ParseError(`Expected 6 values, got ${values.length}`);
+
+  const t = Number(values[0].split(":")[1]);
+  const x = Number(values[1].split(":")[1]);
+  const y = Number(values[2].split(":")[1]);
+  const btnA = String(values[3].split(":")[1]).trim().toLowerCase();
+  const btnB = String(values[4].split(":")[1]).trim().toLowerCase();
+  const checksum = Number(values[5].split(":")[1]);
+
+  if (!Number.isFinite(x) || !Number.isFinite(y)) throw new ParseError("Invalid numeric data");
+  if (x < -2048 || x > 2047 || y < -2048 || y > 2047) throw new ParseError("Out of expected range");
+  if (!["0","1"].includes(btnA) || !["0","1"].includes(btnB))throw new ParseError("Invalid button data");
+
+  let chk;
+  chk = (Math.abs(x) + Math.abs(y) + Number(btnA) + Number(btnB)) % 1000;
+
+  if (chk !== checksum) {console.warn("Trama corrupta:", line); throw new ParseError("Checksum mismatch");}
+
+  const result = { t, x: Math.abs(x), y: Math.abs(y), btnA, btnB, chk };
+  console.log(result);
+
+
+  return { x: x | 0, y: y | 0, btnA: btnA === "1", btnB: btnB === "1" };
+}
+
+
+
+class MicrobitAsciiAdapter2 extends BaseAdapter {
+  constructor({ path, baud = 115200, verbose = false } = {}) {
+    super();
+    this.path = path;
+    this.baud = baud;
+    this.port = null;
+    this.buf = "";
+    this.verbose = verbose;
+  }
+
+  async connect() {
+    if (this.connected) return;
+    if (!this.path) throw new Error("serialPort is required for microbit device mode");
+
+    this.port = new SerialPort({
+      path: this.path,
+      baudRate: this.baud,
+      autoOpen: false,
+    });
+
+    await new Promise((resolve, reject) => {
+      this.port.open((err) => (err ? reject(err) : resolve()));
+    });
+
+    this.connected = true;
+    this.onConnected?.(`serial open ${this.path} @${this.baud}`);
+
+    this.port.on("data", (chunk) => this._onChunk(chunk));
+    this.port.on("error", (err) => this._fail(err));
+    this.port.on("close", () => this._closed());
+  }
+
+  async disconnect() {
+    if (!this.connected) return;
+    this.connected = false;
+
+    if (this.port && this.port.isOpen) {
+      await new Promise((resolve, reject) => {
+        this.port.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+    this.port = null;
+    this.buf = "";
+    this.onDisconnected?.("serial closed");
+  }
+
+  getConnectionDetail() {
+    return `serial open ${this.path}`;
+  }
+
+  _onChunk(chunk) {
+    this.buf += chunk.toString("utf8");
+
+    let idx;
+    while ((idx = this.buf.indexOf("\n")) >= 0) {
+      const line = this.buf.slice(0, idx).trim();
+      this.buf = this.buf.slice(idx + 1);
+
+      if (!line) continue;
+
+      try {
+        const parsed = parseCsvLine(line);
+        this.onData?.(parsed);
+      } catch (e) {
+        if (e instanceof ParseError) {
+          if (this.verbose) console.log("Bad data:", e.message, "raw:", line);
+        } else {
+          this._fail(e);
+        }
+      }
+    }
+
+    if (this.buf.length > 4096) this.buf = "";
+  }
+
+  _fail(err) {
+    this.onError?.(String(err?.message || err));
+    this.disconnect();
+  }
+
+  _closed() {
+    if (!this.connected) return;
+    this.connected = false;
+    this.port = null;
+    this.buf = "";
+    this.onDisconnected?.("serial closed (event)");
+  }
+
+  async writeLine(line) {
+    if (!this.port || !this.port.isOpen) return;
+    await new Promise((resolve, reject) => {
+      this.port.write(line, (err) => (err ? reject(err) : resolve()));
+    });
+  }
+
+  async handleCommand(cmd) {
+    if (cmd?.cmd === "setLed") {
+      const x = Math.max(0, Math.min(4, Math.trunc(cmd.x)));
+      const y = Math.max(0, Math.min(4, Math.trunc(cmd.y)));
+      const v = Math.max(0, Math.min(9, Math.trunc(cmd.value)));
+      await this.writeLine(`LED,${x},${y},${v}\n`);
+    }
+  }
+}
+
+module.exports = MicrobitAsciiAdapter2;
+```
+##### NUEVO FORMATO: 
+
+```
+from microbit import *
+import utime
+
+uart.init(115200)
+display.show(Image.YES)
+
+start_time = utime.ticks_ms()
+
+while True:
+    t = utime.ticks_diff(utime.ticks_ms(), start_time)
+    x = accelerometer.get_x()
+    y = accelerometer.get_y()
+    
+    btn_a = "1" if button_a.is_pressed() else "0"
+    btn_b = "1" if button_b.is_pressed() else "0"
+    
+    chk_val = (abs(x) + abs(y) + int(btn_a) + int(btn_b)) % 1000
+    
+    mensaje = "$T:" + str(t) + "|X:" + str(x) + "|Y:" + str(y) + "|A:" + btn_a + "|B:" + btn_b + "|CHK:" + str(chk_val) + "\n"
+    uart.write(mensaje)
+    
+    sleep(100)
+```
+
+*Y se ve asi: { t: 110295, x: 692, y: 508, btnA: '0', btnB: '0', chk: 200 }*
 
 ## Bitácora de aplicación 
 
+#### Código del Sketch.JS CORREGIDO:
+```.js
+const EVENTS = {
+    CONNECT: "CONNECT",
+    DISCONNECT: "DISCONNECT",
+    DATA: "DATA",
+    KEY_PRESSED: "KEY_PRESSED",
+    KEY_RELEASED: "KEY_RELEASED",
+};
+
+class PainterTask extends FSMTask {
+    constructor() {
+        super();
+
+        this.c = color(181, 157, 0);
+        this.lineSize = 100;
+        this.angle = 0;
+        this.clickPosX = 0;
+        this.clickPosY = 0;
+
+        this.rxData = {
+            x: 0,
+            y: 0,
+            btnA: false,
+            btnB: false,
+            prevA: false,
+            prevB: false,
+            ready: false
+        };
+
+        this.transitionTo(this.estado_esperando);
+    }
+
+    estado_esperando = (ev) => {
+        if (ev.type === "ENTRY") {
+            cursor();
+            console.log("Waiting for connection...");
+        } else if (ev.type === EVENTS.CONNECT) {
+            this.transitionTo(this.estado_corriendo);
+        }
+    };
+
+    estado_corriendo = (ev) => {
+        if (ev.type === "ENTRY") {
+            noCursor();
+            strokeWeight(0.75);
+            background(255);
+            console.log("Microbit ready to draw");
+            this.rxData = {
+                x: 0,
+                y: 0,
+                btnA: false,
+                btnB: false,
+                prevA: false,
+                prevB: false,
+                ready: false
+            };
+        }
+
+        else if (ev.type === EVENTS.DISCONNECT) {
+            this.transitionTo(this.estado_esperando);
+        }
+
+        else if (ev.type === EVENTS.DATA) {
+            this.updateLogic(ev.payload);
+        }
+
+        else if (ev.type === EVENTS.KEY_PRESSED) {
+            this.handleKeys(ev.keyCode, ev.key);
+        }
+
+        else if (ev.type === EVENTS.KEY_RELEASED) {
+            this.handleKeyRelease(ev.keyCode, ev.key);
+        }
+
+        else if (ev.type === "EXIT") {
+            cursor();
+        }
+    };
+
+    updateLogic(data) {
+        this.rxData.ready = true;
+        this.rxData.x = map(data.x,-2048,2047,0,width);
+        this.rxData.y = map(data.y,-2048,2047,0,height);
+        this.rxData.btnA = data.btnA;
+        this.rxData.btnB = data.btnB;
+
+        if (this.rxData.btnA && !this.prevA) {
+            this.lineSize = random(50, 160);
+            this.clickPosX = this.rxData.x;
+            this.clickPosY = this.rxData.y;
+            console.log("A pressed");
+        }
+
+        if (!this.rxData.btnB && this.prevB) {
+            this.c = color(random(255), random(255), random(255), random(80, 100));
+            console.log("B released");
+        }
+
+        this.prevA = this.rxData.btnA;
+        this.prevB = this.rxData.btnB;
+    }
+}
+
+let painter;
+let bridge;
+let connectBtn;
+const renderer = new Map();
+
+function setup() {
+    createCanvas(windowWidth, windowHeight);
+    background(255);
+    painter = new PainterTask();
+    bridge = new BridgeClient();
+
+    bridge.onConnect(() => {
+        connectBtn.html("Disconnect");
+        painter.postEvent({ type: EVENTS.CONNECT });
+    });
+
+    bridge.onDisconnect(() => {
+        connectBtn.html("Connect");
+        painter.postEvent({ type: EVENTS.DISCONNECT });
+    });
+
+    bridge.onStatus((s) => {
+        console.log("BRIDGE STATUS:", s.state, s.detail ?? "");
+    });
+
+    bridge.onData((data) => {
+        painter.postEvent({
+            type: EVENTS.DATA, payload: {
+                x: data.x,
+                y: data.y,
+                btnA: data.btnA,
+                btnB: data.btnB
+            }
+        });
+    });
+
+    connectBtn = createButton("Connect");
+    connectBtn.position(10, 10);
+    connectBtn.mousePressed(() => {
+        if (bridge.isOpen) bridge.close();
+        else bridge.open();
+    });
+
+    renderer.set(painter.estado_corriendo, drawRunning);
+}
+
+function draw() {
+    painter.update();
+    renderer.get(painter.state)?.();
+}
+
+function drawRunning() {
+    let mb = painter.rxData;
+
+    if (!mb.ready) return;
+
+    if (mb.btnA) 
+    {
+	    push();
+	    translate(mb.x, mb.y);
+
+	    let circleResolution = int(map(mb.y + 100, 0, height, 2, 10));
+	    let radius = mb.x - width / 2;
+	    let angle = TAU / circleResolution;
+
+	    if (mb.btnB) {
+		    fill(34, 45, 122, 50);
+	    } else {
+		    noFill();
+	    }
+
+	    beginShape();
+	    for (let i = 0; i <= circleResolution; i++) {
+		    let x = cos(angle * i) * radius;
+		    let y = sin(angle * i) * radius;
+		    vertex(x, y);
+	    }
+	    endShape();
+
+	    pop();
+    }   
+}
+
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+}
+```
+
+##### Notas: 
+El proceso no fue dificil pero requeria mucha atencion a los pequeños detalles que debia cambiar. Una vez entendi por completo (PUES YO YA ENTENDIA LA GRAN PARTE DEL PROCESO) entonces fue mucho más sencillo.
+
+#### Pruebas del funcionamiento: 
+###### Imagen del sketch original con las lineas amarillas: 
+<img width="1708" height="834" alt="image" src="https://github.com/user-attachments/assets/b0fbf555-e92d-40ae-ad52-aad66834d14d" />
+
+Esta imagen es prueba del cambio de patron de arte generativo que el profe requería: 
+###### Originalmente se dibujaban lineas amarillas y ahora son octágonos NEGROS.
+<img width="1694" height="881" alt="image" src="https://github.com/user-attachments/assets/392c5d38-7afe-44ed-b181-55eaf51c4f1f" />
+
+#### Diagramas en ExcaliDraw hechos a memoria: 
+![diagramaInteractivos](https://github.com/user-attachments/assets/8270bd3b-beb9-4b08-b8a2-20e70665ffc6)
 
 ## Bitácora de reflexión
+
