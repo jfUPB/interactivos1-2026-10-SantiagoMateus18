@@ -3,7 +3,7 @@
 ## Bitácora de proceso de aprendizaje
 
 ### Actividad 02
-#### Código del primer adapter
+#### Código del nuevo adapter
 ```.js
 const { SerialPort } = require("serialport");
 const BaseAdapter = require("./BaseAdapter");
@@ -11,30 +11,36 @@ const BaseAdapter = require("./BaseAdapter");
 class ParseError extends Error { }
 
 function parseCsvLine(line) {
+  const cleanLine = line.trim().replace("$", "");
   const values = line.trim().split("|");
   if (values.length !== 6) throw new ParseError(`Expected 6 values, got ${values.length}`);
 
-  const t = Number (values[0])
-  const x = Number(values[1]);
-  const y = Number(values[2]);
-  const btnA = String(values[3]).trim().toLowerCase();
-  const btnB = String(values[4]).trim().toLowerCase();
-  let chk;
-  chk = (Math.abs(x) + Math.abs(y) + Number(btnA === "true") + Number(btnB === "true")) % 1000;
+  const t = Number(values[0].split(":")[1]);
+  const x = Number(values[1].split(":")[1]);
+  const y = Number(values[2].split(":")[1]);
+  const btnA = String(values[3].split(":")[1]).trim().toLowerCase();
+  const btnB = String(values[4].split(":")[1]).trim().toLowerCase();
+  const checksum = Number(values[5].split(":")[1]);
 
   if (!Number.isFinite(x) || !Number.isFinite(y)) throw new ParseError("Invalid numeric data");
   if (x < -2048 || x > 2047 || y < -2048 || y > 2047) throw new ParseError("Out of expected range");
-  if (!["true", "false"].includes(btnA) || !["true", "false"].includes(btnB)) throw new ParseError("Invalid button data");
+  if (!["0","1"].includes(btnA) || !["0","1"].includes(btnB))throw new ParseError("Invalid button data");
+
+  let chk;
+  chk = (Math.abs(x) + Math.abs(y) + Number(btnA) + Number(btnB)) % 1000;
+
+  if (chk !== checksum) {console.warn("Trama corrupta:", line); throw new ParseError("Checksum mismatch");}
 
   const result = { t, x: Math.abs(x), y: Math.abs(y), btnA, btnB, chk };
-
   console.log(result);
 
-  return { x: x | 0, y: y | 0, btnA: btnA === "true", btnB: btnB === "true" };
+
+  return { x: x | 0, y: y | 0, btnA: btnA === "1", btnB: btnB === "1" };
 }
 
 
-class MicrobitAsciiAdapter extends BaseAdapter {
+
+class MicrobitAsciiAdapter2 extends BaseAdapter {
   constructor({ path, baud = 115200, verbose = false } = {}) {
     super();
     this.path = path;
@@ -142,9 +148,37 @@ class MicrobitAsciiAdapter extends BaseAdapter {
   }
 }
 
-module.exports = MicrobitAsciiAdapter;
+module.exports = MicrobitAsciiAdapter2;
+```
+##### NUEVO FORMATO: 
 
 ```
+from microbit import *
+import utime
+
+uart.init(115200)
+display.show(Image.YES)
+
+start_time = utime.ticks_ms()
+
+while True:
+    t = utime.ticks_diff(utime.ticks_ms(), start_time)
+    x = accelerometer.get_x()
+    y = accelerometer.get_y()
+    
+    btn_a = "1" if button_a.is_pressed() else "0"
+    btn_b = "1" if button_b.is_pressed() else "0"
+    
+    chk_val = (abs(x) + abs(y) + int(btn_a) + int(btn_b)) % 1000
+    
+    mensaje = "$T:" + str(t) + "|X:" + str(x) + "|Y:" + str(y) + "|A:" + btn_a + "|B:" + btn_b + "|CHK:" + str(chk_val) + "\n"
+    uart.write(mensaje)
+    
+    sleep(100)
+```
+
+*Y se ve asi: { t: 110295, x: 692, y: 508, btnA: '0', btnB: '0', chk: 200 }*
+
 ## Bitácora de aplicación 
 
 #### Código del Sketch.JS CORREGIDO:
@@ -348,7 +382,7 @@ El proceso no fue dificil pero requeria mucha atencion a los pequeños detalles 
 
 Esta imagen es prueba del cambio de patron de arte generativo que el profe requería: 
 ###### Originalmente se dibujaban lineas amarillas y ahora son octágonos NEGROS.
-<img width="1250" height="760" alt="image" src="https://github.com/user-attachments/assets/e5db7bd5-e032-4602-b74a-5b87548be2af" />
+<img width="1694" height="881" alt="image" src="https://github.com/user-attachments/assets/392c5d38-7afe-44ed-b181-55eaf51c4f1f" />
 
 #### Diagramas en ExcaliDraw hechos a memoria: 
 ![diagramaInteractivos](https://github.com/user-attachments/assets/8270bd3b-beb9-4b08-b8a2-20e70665ffc6)
